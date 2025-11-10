@@ -2,10 +2,11 @@ import { createBrowserRouter } from "react-router";
 import Layout from "../Layouts/Layout";
 import AllUsers from "../Components/AllUsers";
 import UserCard from "../Components/UserCard";
-
 import Home from "../Pages/Home";
 import PartnerDetails from "../Pages/PartnerDetails";
 import ErrorPage from "../Pages/ErrorPage";
+import Login from "../Pages/Login";
+import Register from "../Pages/Register";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
@@ -38,6 +39,8 @@ const router = createBrowserRouter([
         element: <UserCard />,
         loader: () => fetchJson(`${API_BASE}/users`),
       },
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
     ],
   },
 ]);
