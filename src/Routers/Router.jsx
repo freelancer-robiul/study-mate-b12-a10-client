@@ -1,27 +1,42 @@
 import { createBrowserRouter } from "react-router";
-import Home from "../assets/Pages/Home";
 import Layout from "../Layouts/Layout";
 import AllUsers from "../Components/AllUsers";
 import UserCard from "../Components/UserCard";
 
+import Home from "../Pages/Home";
+import PartnerDetails from "../Pages/PartnerDetails";
+import ErrorPage from "../Pages/ErrorPage";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
+
+const fetchJson = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Response(null, {
+      status: res.status,
+      statusText: res.statusText,
+    });
+  }
+  return res.json();
+};
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout></Layout>,
+    element: <Layout />,
+    errorElement: <ErrorPage />,
     children: [
+      { index: true, element: <Home /> },
+      { path: "partners/:id", element: <PartnerDetails /> },
       {
-        index: true,
-        element: <Home></Home>,
+        path: "all-users",
+        element: <AllUsers />,
+        loader: () => fetchJson(`${API_BASE}/users`),
       },
       {
-        path: "/all-users",
-        element: <AllUsers></AllUsers>,
-        loader: () => fetch("http://localhost:3000/users"),
-      },
-      {
-        path: "/user-card",
-        element: <UserCard></UserCard>,
-        loader: () => fetch("http://localhost:3000/users"),
+        path: "user-card",
+        element: <UserCard />,
+        loader: () => fetchJson(`${API_BASE}/users`),
       },
     ],
   },
