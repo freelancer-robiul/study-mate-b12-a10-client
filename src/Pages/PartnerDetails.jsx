@@ -1,73 +1,128 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams } from "react-router";
+import { API_BASE, getJson, postJson } from "../lib/api";
+import { useAuth } from "../Contexts/AuthContext";
+import { toast } from "react-toastify";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
+const asId = (v) =>
+  typeof v === "string" ? v : v?.$oid || v?.toString?.() || "";
 
 const PartnerDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const [p, setP] = useState(null);
-  const [err, setErr] = useState("");
+  const { user } = useAuth();
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const d = await getJson(`${API_BASE}/api/partners/${id}`);
+      setData(d);
+    } catch (e) {
+      toast.error(e.message || "Failed to load partner");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/partners/${id}`);
-        if (!res.ok) throw new Error();
-        setP(await res.json());
-      } catch {
-        setErr("Failed to load");
-      }
-    })();
+    load();
   }, [id]);
 
-  if (err)
-    return <div className="container mx-auto p-6 alert alert-error">{err}</div>;
-  if (!p) return <div className="container mx-auto p-6">Loading…</div>;
+  const handleSendRequest = async () => {
+    if (!user?.email) {
+      return toast.error("Please login again");
+    }
+    setSending(true);
+    try {
+      const res = await postJson(`${API_BASE}/api/partners/${id}/request`, {
+        requesterEmail: user.email,
+      });
+      setData(res.partner);
+      toast.success("Partner request sent");
+    } catch (e) {
+      toast.error(e.message || "Failed to send request");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (loading || !data) {
+    return (
+      <div className="container mx-auto px-4 md:px-8 py-8">
+        <div className="card bg-base-100 shadow animate-pulse max-w-3xl mx-auto">
+          <div className="h-56 bg-base-200" />
+          <div className="card-body">
+            <div className="h-6 w-1/2 bg-base-200 rounded" />
+            <div className="h-4 w-1/3 bg-base-200 rounded mt-2" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const pid = asId(data._id) || asId(data.id);
 
   return (
     <main className="container mx-auto px-4 md:px-8 py-8">
-      <button className="btn btn-outline mb-4" onClick={() => navigate(-1)}>
-        ← Back
-      </button>
-      <div className="grid md:grid-cols-2 gap-6">
-        <img
-          src={p.profileimage}
-          alt={p.name}
-          className="w-full h-[390px] object-cover rounded-xl shadow"
-          onError={(e) =>
-            (e.currentTarget.src =
-              "https://i.ibb.co/9G7n1Qh/default-avatar.png")
-          }
-        />
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">{p.name}</h1>
-          <p className="opacity-80">{p.email}</p>
-          <div className="divider" />
-          <p>
-            <span className="font-semibold">Subject:</span> {p.subject}
-          </p>
-          <p>
-            <span className="font-semibold">Experience:</span>{" "}
-            {p.experienceLevel}
-          </p>
-          <p>
-            <span className="font-semibold">Study Mode:</span> {p.studyMode}
-          </p>
-          <p>
-            <span className="font-semibold">Availability:</span>{" "}
-            {p.availabilityTime}
-          </p>
-          <p>
-            <span className="font-semibold">Location:</span> {p.location}
-          </p>
-          <p>
-            <span className="font-semibold">Rating:</span>{" "}
-            {Number(p.rating || 0).toFixed(1)}
-          </p>
-          <p>
-            <span className="font-semibold">Partners:</span> {p.patnerCount}
-          </p>
+      <div className="max-w-3xl mx-auto card bg-base-100 shadow">
+        <figure className="w-full max-h-[340px] overflow-hidden">
+          <img
+            src={data.profileimage}
+            alt={data.name}
+            className="w-full object-cover"
+            onError={(e) =>
+              (e.currentTarget.src =
+                "https://i.ibb.co/9G7n1Qh/default-avatar.png")
+            }
+          />
+        </figure>
+        <div className="card-body">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold">{data.name}</h1>
+            <div className="badge badge-lg">{data.experienceLevel}</div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3 mt-2 text-sm">
+            <div>
+              <p>
+                <span className="font-semibold">Subject:</span> {data.subject}
+              </p>
+              <p>
+                <span className="font-semibold">Study Mode:</span>{" "}
+                {data.studyMode}
+              </p>
+              <p>
+                <span className="font-semibold">Availability:</span>{" "}
+                {data.availabilityTime}
+              </p>
+            </div>
+            <div>
+              <p>
+                <span className="font-semibold">Location:</span> {data.location}
+              </p>
+              <p>
+                <span className="font-semibold">Rating:</span>{" "}
+                {Number(data.rating || 0).toFixed(1)}
+              </p>
+              <p>
+                <span className="font-semibold">Partner Count:</span>{" "}
+                {data.patnerCount || 0}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <button
+              onClick={handleSendRequest}
+              disabled={sending}
+              className="btn btn-primary"
+            >
+              {sending ? "Sending..." : "Send Partner Request"}
+            </button>
+          </div>
         </div>
       </div>
     </main>
