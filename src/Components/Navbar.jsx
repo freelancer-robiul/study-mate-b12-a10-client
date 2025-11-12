@@ -7,13 +7,14 @@ const Navbar = () => {
 
   const baseLink = "px-3 py-2 rounded-lg hover:bg-base-200 transition";
   const activeClass = ({ isActive }) =>
-    `${baseLink} ${isActive ? "bg-base-200 font-semibold" : ""}`;
+    `${baseLink} ${isActive ? "bg-base-200 font-semibold text-primary" : ""}`;
 
   const avatarSrc =
     user?.photoURL || "https://i.ibb.co/9G7n1Qh/default-avatar.png";
 
   return (
     <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50">
+      {/* Left: Logo */}
       <div className="navbar-start">
         <Link to="/" className="btn btn-ghost text-xl gap-2">
           <img
@@ -26,10 +27,11 @@ const Navbar = () => {
         </Link>
       </div>
 
+      {/* Center: Menu (desktop) */}
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal">
           <li>
-            <NavLink to="/" className={activeClass}>
+            <NavLink to="/" end className={activeClass}>
               Home
             </NavLink>
           </li>
@@ -62,13 +64,14 @@ const Navbar = () => {
             </Link>
           </div>
         ) : (
+          // When user logged in
           <div className="dropdown dropdown-end">
             <div
               tabIndex={0}
               role="button"
               className="btn btn-ghost btn-circle avatar"
             >
-              <div className="w-10 rounded-full ring ring-base-300">
+              <div className="w-10 rounded-full ring ring-base-300 ring-offset-base-100 ring-offset-1">
                 <img
                   alt={user?.displayName || "User"}
                   src={avatarSrc}
@@ -80,10 +83,12 @@ const Navbar = () => {
                 />
               </div>
             </div>
+
             <ul
               tabIndex={0}
               className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-64"
             >
+              {/* Profile Info */}
               <li className="mb-1 pointer-events-none">
                 <div className="px-3 py-2">
                   <p className="font-semibold leading-tight">
@@ -93,6 +98,7 @@ const Navbar = () => {
                 </div>
               </li>
               <div className="divider my-1" />
+              {/* Menu Links */}
               <li>
                 <NavLink to="/profile" className={activeClass}>
                   Profile
@@ -106,6 +112,65 @@ const Navbar = () => {
             </ul>
           </div>
         )}
+      </div>
+
+      {/* Mobile Menu (hamburger) */}
+      <div className="dropdown lg:hidden">
+        <div tabIndex={0} role="button" className="btn btn-ghost">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </div>
+        <ul
+          tabIndex={0}
+          className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 right-0"
+        >
+          <li>
+            <NavLink to="/" end className={activeClass}>
+              Home
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/find-partners" className={activeClass}>
+              Find Partners
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/create-partner" className={activeClass}>
+              Create Partner
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/my-connections" className={activeClass}>
+              My Connections
+            </NavLink>
+          </li>
+          {!user && (
+            <>
+              <li>
+                <Link to="/login" className={baseLink}>
+                  Login
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" className={baseLink}>
+                  Register
+                </Link>
+              </li>
+            </>
+          )}
+        </ul>
       </div>
     </div>
   );
