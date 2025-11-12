@@ -1,33 +1,30 @@
+import axios from "axios";
+
 export const API_BASE =
   import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
-const parse = async (res) => {
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {}
-  if (!res.ok) {
+const api = axios.create({
+  baseURL: API_BASE,
+  headers: { "Content-Type": "application/json" },
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
     const msg =
-      data?.message || data?.detail || `${res.status} ${res.statusText}`;
-    throw new Error(msg);
+      err?.response?.data?.message ||
+      err?.response?.data?.detail ||
+      err?.message ||
+      "Request failed";
+    return Promise.reject(new Error(msg));
   }
-  return data;
-};
+);
 
-export const getJson = (url) => fetch(url, { method: "GET" }).then(parse);
-
-export const postJson = (url, body) =>
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }).then(parse);
-
-export const patchJson = (url, body) =>
-  fetch(url, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }).then(parse);
-
-export const delJson = (url) => fetch(url, { method: "DELETE" }).then(parse);
+export const getJson = (url, config = {}) =>
+  api.get(url, config).then((r) => r.data);
+export const postJson = (url, body, config = {}) =>
+  api.post(url, body, config).then((r) => r.data);
+export const patchJson = (url, body, config = {}) =>
+  api.patch(url, body, config).then((r) => r.data);
+export const delJson = (url, config = {}) =>
+  api.delete(url, config).then((r) => r.data);

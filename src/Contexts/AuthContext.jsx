@@ -1,62 +1,41 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import app from "../Firebase/firebase.config";
 import {
-  getAuth,
+  GoogleAuthProvider,
   onAuthStateChanged,
-  signOut,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
   createUserWithEmailAndPassword,
   updateProfile,
-  GoogleAuthProvider,
-  signInWithPopup,
-  sendPasswordResetEmail,
 } from "firebase/auth";
+import { auth } from "../Firebase/firebase.config";
 
-const auth = getAuth(app);
-const AuthContext = createContext(null);
-export const useAuth = () => useContext(AuthContext);
+const Ctx = createContext(null);
+const provider = new GoogleAuthProvider();
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const signIn = (email, password) => signInWithEmailAndPassword(auth, email, password);
+  const googleSignIn = () => signInWithPopup(auth, provider);
+  const register = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+  const updateUser = (profile) => updateProfile(auth.currentUser, profile);
+  const logout = () => signOut(auth);
+
   useEffect(() => {
-    const un = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u || null);
       setLoading(false);
     });
-    return () => un();
+    return () => unsub();
   }, []);
 
-  const register = (email, password, name, photoURL) =>
-    createUserWithEmailAndPassword(auth, email, password).then(async (res) => {
-      if (name || photoURL)
-        await updateProfile(res.user, { displayName: name, photoURL });
-      setUser({ ...res.user });
-      return res;
-    });
-
-  const login = (email, password) =>
-    signInWithEmailAndPassword(auth, email, password);
-  const googleLogin = () => signInWithPopup(auth, new GoogleAuthProvider());
-  const resetPassword = (email) => sendPasswordResetEmail(auth, email);
-  const logout = () => signOut(auth);
-
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        register,
-        login,
-        googleLogin,
-        resetPassword,
-        logout,
-      }}
-    >
-      {!loading && children}
-    </AuthContext.Provider>
+    <Ctx.Provider value={{ user, loading, signIn, googleSignIn, register, updateUser, logout }}>
+      {children}
+    </Ctx.Provider>
   );
 };
 
-export default AuthProvider;
+export const useAuth = () => useContext(Ctx);

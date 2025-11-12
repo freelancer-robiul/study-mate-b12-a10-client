@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { API_BASE, getJson, postJson } from "../lib/api";
+import Loader from "../Components/Loader";
 import { useAuth } from "../Contexts/AuthContext";
 import { toast } from "react-toastify";
-
-const asId = (v) =>
-  typeof v === "string" ? v : v?.$oid || v?.toString?.() || "";
 
 const PartnerDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
-
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -18,7 +15,7 @@ const PartnerDetails = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const d = await getJson(`${API_BASE}/api/partners/${id}`);
+      const d = await getJson(`/api/partners/${id}`);
       setData(d);
     } catch (e) {
       toast.error(e.message || "Failed to load partner");
@@ -32,12 +29,10 @@ const PartnerDetails = () => {
   }, [id]);
 
   const handleSendRequest = async () => {
-    if (!user?.email) {
-      return toast.error("Please login again");
-    }
+    if (!user?.email) return toast.error("Please login again");
     setSending(true);
     try {
-      const res = await postJson(`${API_BASE}/api/partners/${id}/request`, {
+      const res = await postJson(`/api/partners/${id}/request`, {
         requesterEmail: user.email,
       });
       setData(res.partner);
@@ -49,21 +44,7 @@ const PartnerDetails = () => {
     }
   };
 
-  if (loading || !data) {
-    return (
-      <div className="container mx-auto px-4 md:px-8 py-8">
-        <div className="card bg-base-100 shadow animate-pulse max-w-3xl mx-auto">
-          <div className="h-56 bg-base-200" />
-          <div className="card-body">
-            <div className="h-6 w-1/2 bg-base-200 rounded" />
-            <div className="h-4 w-1/3 bg-base-200 rounded mt-2" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const pid = asId(data._id) || asId(data.id);
+  if (loading || !data) return <Loader label="Loading profile..." />;
 
   return (
     <main className="container mx-auto px-4 md:px-8 py-8">

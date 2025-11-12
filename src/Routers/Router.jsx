@@ -1,30 +1,16 @@
 import { createBrowserRouter } from "react-router";
 import Layout from "../Layouts/Layout";
 import Home from "../Pages/Home";
-import PartnerDetails from "../Pages/PartnerDetails";
 import FindPartners from "../Pages/FindPartners";
+import PartnerDetails from "../Pages/PartnerDetails";
 import CreatePartner from "../Pages/CreatePartner";
 import EditPartner from "../Pages/EditPartner";
 import MyConnections from "../Pages/MyConnections";
 import Profile from "../Pages/Profile";
-import AllUsers from "../Components/AllUsers";
-import UserCard from "../Components/UserCard";
-import ErrorPage from "../Pages/ErrorPage";
 import Login from "../Pages/Login";
 import Register from "../Pages/Register";
+import ErrorPage from "../Pages/ErrorPage";
 import RequireAuth from "./RequireAuth";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
-
-const fetchJson = async (url) => {
-  const res = await fetch(url);
-  if (!res.ok)
-    throw new Response(null, {
-      status: res.status,
-      statusText: res.statusText,
-    });
-  return res.json();
-};
 
 const router = createBrowserRouter([
   {
@@ -73,16 +59,6 @@ const router = createBrowserRouter([
             <Profile />
           </RequireAuth>
         ),
-      },
-      {
-        path: "all-users",
-        element: <AllUsers />,
-        loader: () => fetchJson(`${API_BASE}/users`),
-      },
-      {
-        path: "user-card",
-        element: <UserCard />,
-        loader: () => fetchJson(`${API_BASE}/users`),
       },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
