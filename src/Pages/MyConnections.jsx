@@ -1,36 +1,38 @@
 import React, { useEffect, useState } from "react";
-import { getJson, patchJson, delJson } from "../lib/api";
 import { useAuth } from "../Contexts/AuthContext";
-import Loader from "../Components/Loader";
+import { API_BASE, getJson, patchJson, delJson } from "../lib/api";
 import { toast } from "react-toastify";
 
-const asId = (v) =>
-  typeof v === "string" ? v : v?.$oid || v?.toString?.() || "";
+const emptyForm = {
+  name: "",
+  location: "",
+  studyMode: "Online",
+  preferredMode: "Online",
+  note: "",
+};
 
 const MyConnections = () => {
   const { user } = useAuth();
-  const [rows, setRows] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [editOpen, setEditOpen] = useState(false);
-  const [editId, setEditId] = useState("");
+  const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState("");
-  const [editForm, setEditForm] = useState({
-    preferredMode: "Online",
-    note: "",
-  });
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(emptyForm);
 
   const load = async () => {
     if (!user?.email) return;
     setLoading(true);
     try {
       const data = await getJson(
-        `/api/requests?requesterEmail=${encodeURIComponent(user.email)}`
+        `${API_BASE}/api/requests?requesterEmail=${encodeURIComponent(
+          user.email
+        )}`
       );
-      setRows(data);
-    } catch {
-      toast.error("Failed to load requests");
+      setItems(data);
+    } catch (e) {
+      toast.error(e.message || "Failed to load requests");
     } finally {
       setLoading(false);
     }
@@ -41,30 +43,48 @@ const MyConnections = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email]);
 
-  const openEdit = (r) => {
-    setEditId(asId(r._id));
-    setEditForm({
-      preferredMode:
-        r.preferredMode || r.partnerSnapshot?.studyMode || "Online",
-      note: r.note || "",
+  const openEdit = (req) => {
+    setEditingId(req._id);
+    setForm({
+      name: req.partnerSnapshot?.name || "",
+      location: req.partnerSnapshot?.location || "",
+      studyMode: req.partnerSnapshot?.studyMode || "Online",
+      preferredMode: req.preferredMode || "Online",
+      note: req.note || "",
     });
-    setEditOpen(true);
+    setOpen(true);
+  };
+
+  const closeEdit = () => {
+    setOpen(false);
+    setEditingId(null);
+    setForm(emptyForm);
   };
 
   const saveEdit = async () => {
-    if (!editId) return;
+    if (!editingId) return;
     setSaving(true);
     try {
-      const updated = await patchJson(`/api/requests/${editId}`, {
-        preferredMode: editForm.preferredMode,
-        note: editForm.note,
-        updatedAt: new Date(),
-      });
-      setRows((prev) =>
-        prev.map((x) => (asId(x._id) === asId(updated._id) ? updated : x))
+      // Use dot-notation to update nested partnerSnapshot fields
+      const payload = {
+        "partnerSnapshot.name": form.name,
+        "partnerSnapshot.location": form.location,
+        "partnerSnapshot.studyMode": form.studyMode,
+        preferredMode: form.preferredMode,
+        note: form.note,
+      };
+      const updated = await patchJson(
+        `${API_BASE}/api/requests/${editingId}`,
+        payload
       );
+
+      // Update the item locally without full reload
+      setItems((prev) =>
+        prev.map((it) => (it._id === updated._id ? updated : it))
+      );
+
       toast.success("Request updated");
-      setEditOpen(false);
+      closeEdit();
     } catch (e) {
       toast.error(e.message || "Update failed");
     } finally {
@@ -72,30 +92,26 @@ const MyConnections = () => {
     }
   };
 
-  const onDelete = async (rawId) => {
-    const id = asId(rawId);
-    if (!id) return toast.error("Invalid request id");
+  const onDelete = async (id) => {
     if (!confirm("Delete this request?")) return;
-    setDeletingId(id);
     try {
-      await delJson(`/api/requests/${id}`);
-      setRows((prev) => prev.filter((x) => asId(x._id) !== id));
-      toast.success("Request deleted");
+      await delJson(`${API_BASE}/api/requests/${id}`);
+      setItems((prev) => prev.filter((x) => x._id !== id));
+      toast.success("Deleted");
     } catch (e) {
       toast.error(e.message || "Delete failed");
-    } finally {
-      setDeletingId("");
     }
   };
-
-  if (loading) return <Loader label="Loading your connections..." />;
 
   return (
     <main className="container mx-auto px-4 md:px-8 py-8">
       <h1 className="text-2xl font-bold">My Connections</h1>
 
-      {rows.length === 0 ? (
-        <p className="mt-6 opacity-70">No partner requests yet.</p>
+      {/* Table */}
+      {loading ? (
+        <div className="mt-8">Loading...</div>
+      ) : items.length === 0 ? (
+        <p className="opacity-70 mt-6">No requests yet.</p>
       ) : (
         <div className="overflow-x-auto mt-6">
           <table className="table">
@@ -110,117 +126,147 @@ const MyConnections = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => {
-                const id = asId(r._id);
-                const snap = r.partnerSnapshot || {};
-                return (
-                  <tr key={id}>
-                    <td>
-                      <div className="flex items-center gap-3">
-                        <div className="avatar">
-                          <div className="mask mask-squircle w-12 h-12">
-                            <img
-                              src={snap.profileimage}
-                              alt={snap.name}
-                              onError={(e) =>
-                                (e.currentTarget.src =
-                                  "https://i.ibb.co/9G7n1Qh/default-avatar.png")
-                              }
-                            />
-                          </div>
-                        </div>
-                        <div className="font-semibold">{snap.name}</div>
+              {items.map((r) => (
+                <tr key={r._id}>
+                  <td className="flex items-center gap-3">
+                    <div className="avatar">
+                      <div className="mask mask-squircle w-12 h-12">
+                        <img
+                          src={
+                            r.partnerSnapshot?.profileimage ||
+                            "https://i.ibb.co/9G7n1Qh/default-avatar.png"
+                          }
+                          alt={r.partnerSnapshot?.name || "Partner"}
+                          onError={(e) =>
+                            (e.currentTarget.src =
+                              "https://i.ibb.co/9G7n1Qh/default-avatar.png")
+                          }
+                        />
                       </div>
-                    </td>
-                    <td>{snap.subject}</td>
-                    <td>{snap.studyMode}</td>
-                    <td>{r.preferredMode || "-"}</td>
-                    <td className="max-w-[220px] truncate" title={r.note || ""}>
-                      {r.note || "-"}
-                    </td>
-                    <td className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          className="btn btn-outline btn-sm"
-                          onClick={() => openEdit(r)}
-                        >
-                          Update
-                        </button>
-                        <button
-                          className="btn btn-error btn-sm"
-                          onClick={() => onDelete(id)}
-                          disabled={deletingId === id}
-                        >
-                          {deletingId === id ? "Deleting..." : "Delete"}
-                        </button>
+                    </div>
+                    <div>
+                      <div className="font-bold">
+                        {r.partnerSnapshot?.name || "-"}
                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      <div className="text-sm opacity-50">
+                        {r.partnerEmail || ""}
+                      </div>
+                    </div>
+                  </td>
+                  <td>{r.partnerSnapshot?.subject || "-"}</td>
+                  <td>{r.partnerSnapshot?.studyMode || "-"}</td>
+                  <td>{r.preferredMode || "-"}</td>
+                  <td>{r.note || "-"}</td>
+                  <td className="text-right space-x-2">
+                    <button className="btn btn-sm" onClick={() => openEdit(r)}>
+                      Update
+                    </button>
+                    <button
+                      className="btn btn-sm btn-error"
+                      onClick={() => onDelete(r._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       )}
 
-      {editOpen && (
-        <dialog open className="modal">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg mb-3">Update Request</h3>
-            <div className="grid gap-3">
-              <label className="form-control">
-                <span className="label-text">Preferred Mode</span>
-                <select
-                  className="select select-bordered"
-                  value={editForm.preferredMode}
-                  onChange={(e) =>
-                    setEditForm((p) => ({
-                      ...p,
-                      preferredMode: e.target.value,
-                    }))
-                  }
-                >
-                  <option>Online</option>
-                  <option>Offline</option>
-                  <option>Hybrid</option>
-                </select>
-              </label>
+      {/* Edit Modal */}
+      <dialog className={`modal ${open ? "modal-open" : ""}`}>
+        <div className="modal-box max-w-2xl">
+          <h3 className="font-bold text-lg mb-4">Update Request</h3>
 
-              <label className="form-control">
-                <span className="label-text">Note</span>
-                <textarea
-                  className="textarea textarea-bordered"
-                  placeholder="Add a short note"
-                  value={editForm.note}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, note: e.target.value }))
-                  }
-                />
-              </label>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="form-control">
+              <span className="label-text">Partner Name</span>
+              <input
+                type="text"
+                className="input input-bordered"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
+                placeholder="e.g., Aisha Rahman"
+              />
+            </label>
 
-            <div className="modal-action">
-              <button className="btn" onClick={() => setEditOpen(false)}>
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={saveEdit}
-                disabled={saving}
+            <label className="form-control">
+              <span className="label-text">Location</span>
+              <input
+                type="text"
+                className="input input-bordered"
+                value={form.location}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, location: e.target.value }))
+                }
+                placeholder="City, area"
+              />
+            </label>
+
+            <label className="form-control">
+              <span className="label-text">Study Mode (Partner)</span>
+              <select
+                className="select select-bordered"
+                value={form.studyMode}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, studyMode: e.target.value }))
+                }
               >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
+                <option>Online</option>
+                <option>Offline</option>
+                <option>Hybrid</option>
+              </select>
+            </label>
+
+            <label className="form-control">
+              <span className="label-text">Preferred Mode (Your request)</span>
+              <select
+                className="select select-bordered"
+                value={form.preferredMode}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, preferredMode: e.target.value }))
+                }
+              >
+                <option>Online</option>
+                <option>Offline</option>
+                <option>Hybrid</option>
+              </select>
+            </label>
+
+            <label className="form-control md:col-span-2">
+              <span className="label-text">Note</span>
+              <textarea
+                className="textarea textarea-bordered h-28"
+                placeholder="Add a short note"
+                value={form.note}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, note: e.target.value }))
+                }
+              />
+            </label>
           </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setEditOpen(false)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+
+          <div className="modal-action">
+            <button className="btn" onClick={closeEdit} disabled={saving}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={saveEdit}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop" onClick={closeEdit}>
+          <button>close</button>
+        </form>
+      </dialog>
     </main>
   );
 };

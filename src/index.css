@@ -1,7 +1,14 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 .activeClass {
   color: blue;
   font-weight: 600;
+}
+
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

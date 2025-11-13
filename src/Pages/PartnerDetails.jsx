@@ -1,105 +1,111 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
-import { API_BASE, getJson, postJson } from "../lib/api";
-import Loader from "../Components/Loader";
-import { useAuth } from "../Contexts/AuthContext";
+import { useParams, useNavigate } from "react-router";
 import { toast } from "react-toastify";
+import { getJson, postJson } from "../lib/api";
+import { useAuth } from "../Contexts/AuthContext";
+import Loader from "../Components/Loader";
 
 const PartnerDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const [data, setData] = useState(null);
+  const navigate = useNavigate();
+
+  const [partner, setPartner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  const load = async () => {
+  // Load partner info
+  const loadPartner = async () => {
     setLoading(true);
     try {
-      const d = await getJson(`/api/partners/${id}`);
-      setData(d);
-    } catch (e) {
-      toast.error(e.message || "Failed to load partner");
+      const data = await getJson(`/api/partners/${id}`);
+      setPartner(data);
+    } catch (err) {
+      toast.error(err.message || "Failed to load partner details");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    load();
+    loadPartner();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Handle Send Request
   const handleSendRequest = async () => {
-    if (!user?.email) return toast.error("Please login again");
+    if (!user) {
+      // Redirect to login, but remember this page
+      return navigate("/login", { state: { from: `/partners/${id}` } });
+    }
+
     setSending(true);
     try {
       const res = await postJson(`/api/partners/${id}/request`, {
         requesterEmail: user.email,
       });
-      setData(res.partner);
-      toast.success("Partner request sent");
-    } catch (e) {
-      toast.error(e.message || "Failed to send request");
+      toast.success("Partner request sent!");
+      setPartner(res.partner); // update UI with incremented count
+    } catch (err) {
+      toast.error(err.message || "Failed to send request");
     } finally {
       setSending(false);
     }
   };
 
-  if (loading || !data) return <Loader label="Loading profile..." />;
+  if (loading) return <Loader label="Loading partner details..." />;
+
+  if (!partner)
+    return (
+      <main className="container mx-auto p-8 text-center">
+        <p className="text-red-500">Partner not found.</p>
+      </main>
+    );
 
   return (
     <main className="container mx-auto px-4 md:px-8 py-8">
-      <div className="max-w-3xl mx-auto card bg-base-100 shadow">
-        <figure className="w-full max-h-[340px] overflow-hidden">
+      <div className="max-w-3xl mx-auto bg-base-100 rounded-xl shadow-lg p-6">
+        <div className="flex flex-col md:flex-row gap-6 items-center">
           <img
-            src={data.profileimage}
-            alt={data.name}
-            className="w-full object-cover"
+            src={partner.profileimage}
+            alt={partner.name}
+            className="w-48 h-48 object-cover rounded-lg shadow"
             onError={(e) =>
               (e.currentTarget.src =
                 "https://i.ibb.co/9G7n1Qh/default-avatar.png")
             }
           />
-        </figure>
-        <div className="card-body">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold">{data.name}</h1>
-            <div className="badge badge-lg">{data.experienceLevel}</div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-3 mt-2 text-sm">
-            <div>
+          <div>
+            <h1 className="text-2xl font-bold">{partner.name}</h1>
+            <p className="text-sm opacity-80 mt-1">{partner.email}</p>
+            <div className="mt-3 space-y-1 text-sm">
               <p>
-                <span className="font-semibold">Subject:</span> {data.subject}
+                <strong>Subject:</strong> {partner.subject}
               </p>
               <p>
-                <span className="font-semibold">Study Mode:</span>{" "}
-                {data.studyMode}
+                <strong>Study Mode:</strong> {partner.studyMode}
               </p>
               <p>
-                <span className="font-semibold">Availability:</span>{" "}
-                {data.availabilityTime}
-              </p>
-            </div>
-            <div>
-              <p>
-                <span className="font-semibold">Location:</span> {data.location}
+                <strong>Availability:</strong> {partner.availabilityTime}
               </p>
               <p>
-                <span className="font-semibold">Rating:</span>{" "}
-                {Number(data.rating || 0).toFixed(1)}
+                <strong>Location:</strong> {partner.location}
               </p>
               <p>
-                <span className="font-semibold">Partner Count:</span>{" "}
-                {data.patnerCount || 0}
+                <strong>Experience Level:</strong> {partner.experienceLevel}
+              </p>
+              <p>
+                <strong>Rating:</strong> ⭐ {partner.rating}
+              </p>
+              <p>
+                <strong>Partner Count:</strong> {partner.patnerCount}
               </p>
             </div>
-          </div>
 
-          <div className="mt-4">
             <button
               onClick={handleSendRequest}
               disabled={sending}
-              className="btn btn-primary"
+              className="btn btn-primary mt-5"
             >
               {sending ? "Sending..." : "Send Partner Request"}
             </button>
