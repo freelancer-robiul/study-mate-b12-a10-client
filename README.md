@@ -1,16 +1,40 @@
-# React + Vite
+# 🎓 StudyMate
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Live Site:** (https://studaymate.vercel.app/) (https://profound-baklava-56f5b0.netlify.app/)
 
-Currently, two official plugins are available:
+StudyMate is a modern web platform that connects students with study partners based on subject interests, location, and study preferences. The app makes learning more social, interactive, and effective.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+###  Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+-  **Find Study Partners Easily** – Search by subject, study mode, or location to find compatible partners.
+-  **Top Rated Partners Section** – View and connect with the highest-rated study partners.
+-  **Partner Request System** – Send and receive study requests seamlessly with instant updates.
+-  **Dynamic Rating & Partner Count** – Ratings and partner counts update automatically after each connection.
+-  **Fully Responsive UI** – Works smoothly on desktop, tablet, and mobile devices.
+-  **Secure API Integration** – All data is managed through a secure Node.js and MongoDB-based backend.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+###  Tech Stack
+
+**Frontend:** React (Vite)  
+**Backend:** Node.js, Express.js, MongoDB  
+**Deployment:** Firebase Hosting (client) & Vercel (server)  
+**Authentication (optional):** Firebase Auth  
+**Version Control:** Git & GitHub
+
+---
+
+###  Local Setup
+
+```bash
+# clone the repo
+git clone https://github.com/yourusername/studaymate-client.git
+
+# install dependencies
+npm install
+
+# run locally
+npm run dev
