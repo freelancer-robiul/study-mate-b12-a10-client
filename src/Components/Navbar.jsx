@@ -5,7 +5,7 @@ import { useTheme } from "../Contexts/ThemeContext";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme(); // ✔ FIXED
+  const { theme, toggleTheme } = useTheme();
 
   const baseLink = "px-3 py-2 rounded-lg hover:bg-base-200 transition";
   const activeClass = ({ isActive }) =>
@@ -15,40 +15,32 @@ const Navbar = () => {
     user?.photoURL || "https://i.ibb.co/9G7n1Qh/default-avatar.png";
 
   return (
-    <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50">
+    <div className="navbar shadow-sm sticky top-0 z-50 bg-gradient-to-r from-green-300 to-pink-400">
       <div className="navbar-start">
         <Link to="/" className="btn btn-ghost text-xl gap-2">
           <img
-            src="https://i.ibb.co/1q5PpQk/studymate-logo.png"
+            src="https://images.pexels.com/photos/261909/pexels-photo-261909.jpeg"
             alt="StudyMate Logo"
-            className="w-7 h-7"
+            className="w-7 h-7 rounded-full"
             onError={(e) => (e.currentTarget.style.display = "none")}
           />
-          <span className="font-bold">StudyMate</span>
+          <span className="font-bold text-blue-600 text-2xl">StudyMate</span>
         </Link>
       </div>
 
-      <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal">
+      <div className="navbar-center hidden lg:flex text-white">
+        <ul className="menu menu-horizontal text-[16px]">
           <li>
-            <NavLink to="/" className={activeClass}>
-              Home
-            </NavLink>
+            <NavLink to="/">Home</NavLink>
           </li>
           <li>
-            <NavLink to="/find-partners" className={activeClass}>
-              Find Partners
-            </NavLink>
+            <NavLink to="/find-partners">Find Partners</NavLink>
           </li>
           <li>
-            <NavLink to="/create-partner" className={activeClass}>
-              Create Partner Profile
-            </NavLink>
+            <NavLink to="/create-partner">Create Partner Profile</NavLink>
           </li>
           <li>
-            <NavLink to="/my-connections" className={activeClass}>
-              My Connections
-            </NavLink>
+            <NavLink to="/my-connections">My Connections</NavLink>
           </li>
         </ul>
       </div>
@@ -58,7 +50,7 @@ const Navbar = () => {
         <button
           aria-label="Toggle theme"
           className="btn btn-ghost btn-circle"
-          onClick={toggleTheme} // ✔ FIXED
+          onClick={toggleTheme}
           title={theme === "dark" ? "Switch to Light" : "Switch to Dark"}
         >
           {theme === "dark" ? (

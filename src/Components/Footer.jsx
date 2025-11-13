@@ -3,17 +3,17 @@ import { Link } from "react-router";
 
 const Footer = () => {
   return (
-    <footer className="bg-base-300 text-base-content px-6 md:px-10 py-10 mt-16">
+    <footer className="bg-gradient-to-r from-green-300 to-pink-400 text-base-content px-6 md:px-10 py-10 mt-16">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Logo & About */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <img
-              src="https://i.ibb.co/1q5PpQk/studymate-logo.png"
+              src="https://images.pexels.com/photos/261909/pexels-photo-261909.jpeg"
               alt="StudyMate Logo"
-              className="w-8 h-8"
+              className="w-8 h-8 rounded-full "
             />
-            <h2 className="text-xl font-bold">StudyMate</h2>
+            <h2 className="text-2xl font-bold text-blue-500">StudyMate</h2>
           </div>
           <p className="text-sm opacity-80 leading-relaxed">
             StudyMate helps students connect and collaborate for better learning
@@ -72,7 +72,6 @@ const Footer = () => {
               </svg>
             </a>
 
-            {/* X (formerly Twitter) */}
             <a
               href="https://x.com"
               target="_blank"
@@ -91,7 +90,6 @@ const Footer = () => {
               </svg>
             </a>
 
-            {/* LinkedIn */}
             <a
               href="https://linkedin.com"
               target="_blank"
@@ -110,7 +108,6 @@ const Footer = () => {
               </svg>
             </a>
 
-            {/* Instagram */}
             <a
               href="https://instagram.com"
               target="_blank"
@@ -132,7 +129,6 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Copyright */}
       <div className="border-t border-base-200 mt-8 pt-4 text-center text-sm opacity-70">
         © {new Date().getFullYear()} StudyMate — All rights reserved.
       </div>

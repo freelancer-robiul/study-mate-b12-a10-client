@@ -60,7 +60,7 @@ const HowItWorks = () => {
             className="card bg-base-100 shadow hover:shadow-lg transition"
           >
             <div className="card-body items-start">
-              <div className="p-3 rounded-xl bg-base-200">{s.icon}</div>
+              <div className="p-3 rounded-xl bg-pink-400">{s.icon}</div>
               <h3 className="text-lg font-semibold">{s.title}</h3>
               <p className="opacity-80 text-sm">{s.desc}</p>
             </div>
