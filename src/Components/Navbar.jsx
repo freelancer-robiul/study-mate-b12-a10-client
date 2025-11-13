@@ -78,12 +78,27 @@ const Navbar = () => {
 
         {!user ? (
           <div className="hidden lg:flex gap-2">
-            <Link to="/login" className="btn btn-outline btn-sm">
+            <NavLink
+              to="/login"
+              className={({ isActive }) =>
+                `btn btn-outline btn-sm ${
+                  isActive ? "btn-active bg-blue-500 text-white" : ""
+                }`
+              }
+            >
               Login
-            </Link>
-            <Link to="/register" className="btn btn-primary btn-sm">
+            </NavLink>
+
+            <NavLink
+              to="/register"
+              className={({ isActive }) =>
+                `btn btn-outline btn-sm ${
+                  isActive ? "btn-active bg-blue-500 text-white" : ""
+                }`
+              }
+            >
               Register
-            </Link>
+            </NavLink>
           </div>
         ) : (
           <div className="dropdown dropdown-end">

@@ -12,3 +12,7 @@
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+body{
+  background: linear-gradient(to right, #1e90ff, #00ff7f, #ff69b4, #fff200);;
+}
